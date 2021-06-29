@@ -1,0 +1,122 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <title>islamic tiling inspired pattern generator</title>
+  <script type="text/javascript" src="pattern_gen.js"></script>
+</head>
+
+<style>
+    /* The sidebar menu */
+    .sidenav {
+      height: 100%; /* Full-height: remove this if you want "auto" height */
+      width: 160px; /* Set the width of the sidebar */
+      position: fixed; /* Fixed Sidebar (stay in place on scroll) */
+      z-index: 1; /* Stay on top */
+      top: 0; /* Stay at the top */
+      left: 0;
+      background-color: rgba(250,250,250,0.75); /* near white 50% */
+      overflow-x: hidden; /* Disable horizontal scroll */
+      padding-top: 20px;
+      padding-left:5px;
+      border:1px solid;
+      font-family:arial,sans-serif;
+    }
+
+    /* Style page content */
+    .main {
+      margin-left: 160px; /* Same as the width of the sidebar */
+      padding: 0px 10px;
+    }
+
+    
+</style>
+
+<body>
+    <canvas id="myCanvas" width="400" height="600" style="border:1px solid #c3c3c3;position:fixed;left:0;top:0">
+    Your browser does not support the &lt;canvas&gt; element.
+    </canvas>
+    
+    <!-- These inputs set paramaters in the pattern generator, and mange its animation -->
+    <!-- One can use this input tool to find patterns paramaters one likes, paramaters can then be hard coded into a project -->
+    <div id="mySidenav" class="sidenav">
+        <p>Islamic Tiling Inspired Patern Generator</p>
+        <input type="submit" value="Animate" id="startButton">
+
+        <input type="submit" value="Pause" id="stopButton">
+        <br></br>
+        <label for="fcolor">Foreground Color:</label>
+        <input type="text" id="fcolor" name="fcolor" value="rgba(35,180,210,0.2)"><br><br>
+        
+        <label for="bcolor">Background Color:</label>
+        <input type="text" id="bcolor" name="bcolor" value="white"><br><br>
+        
+        <label for="c_r_s">Current Radius Scaler:</label>
+        <input type="number" id="c_r_s" name="bcolor" value="0.8" step="0.01"><br><br>
+
+        <label for="m_r_s">Max Radius Scaler:</label>
+        <input type="number" id="m_r_s" name="bcolor" value="7"><br><br>
+
+            
+        <label for="spatial_f">Spatial Frequency:</label>
+        <input type="number" id="spatial_f" name="bcolor" value="10"><br><br>
+
+    </div>
+    
+    <script>
+        
+        //load the paramater values in the inputs into the pattern generator
+        function on_paramater_change() {
+            patternGen.canvas = document.getElementById("myCanvas");
+            patternGen.context = patternGen.canvas.getContext("2d");
+            patternGen.bacgroung_color = document.getElementById("bcolor").value;
+            patternGen.foreground_color = document.getElementById("fcolor").value;
+            patternGen.frequncy = document.getElementById("spatial_f").value;
+            patternGen.max_radus_scalor = document.getElementById("m_r_s").value;
+            patternGen.current_radius_scalor = document.getElementById("c_r_s").value;
+         
+           patternGen.resizeCanvas();
+       }
+    
+      on_paramater_change();
+    
+      function run_animation() {
+        on_paramater_change();
+        
+        patternGen.animate_tiling(document.getElementById("c_r_s")); //update the value of this text box
+      }
+        
+        window.addEventListener('resize', function(event) {
+          patternGen.resizeCanvas();
+        });
+        
+        document.getElementById("startButton").addEventListener("click", function() {
+            run_animation();
+        });
+        
+        document.getElementById("stopButton").addEventListener("click", function() {
+            patternGen.break_animation = true;
+        });
+        
+        document.getElementById("fcolor").addEventListener("input", function() {
+            on_paramater_change();
+        });
+        document.getElementById("bcolor").addEventListener("input", function() {
+            on_paramater_change();
+        });
+        document.getElementById("spatial_f").addEventListener("input", function() {
+            on_paramater_change();
+        });
+        document.getElementById("m_r_s").addEventListener("input", function() {
+            on_paramater_change();
+        });
+        document.getElementById("c_r_s").addEventListener("input", function() {
+            on_paramater_change();
+        });
+
+
+        
+    </script>
+</body>
+</html>
