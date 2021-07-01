@@ -58,9 +58,21 @@
         <label for="m_r_s">Max Radius Scaler:</label>
         <input type="number" id="m_r_s" name="bcolor" value="7"><br><br>
 
+        <label for="incr_rotation">Incr. Rotation (Deg):</label>
+        <input type="number" id="incr_rotation" name="bcolor" value="90"><br><br>
             
         <label for="spatial_f">Spatial Frequency:</label>
         <input type="number" id="spatial_f" name="bcolor" value="10"><br><br>
+        
+        <label for="polygonSides">Polygon Sides:</label>
+        <input type="number" id="polygonSides" name="bcolor" value="6"><br><br>
+        
+        <p>Shape:</p>
+        <input type="radio" id="polygon" name="shape" value="polygon">
+        <label for="polygon">polygon</label><br>
+        <input type="radio" id="circle" name="shape" value="circle" checked>
+        <label for="circle">circle</label><br>
+            
 
     </div>
     
@@ -74,8 +86,12 @@
             patternGen.foreground_color = document.getElementById("fcolor").value;
             patternGen.frequncy = document.getElementById("spatial_f").value;
             patternGen.max_radus_scalor = document.getElementById("m_r_s").value;
+            patternGen.step_rotation_rad = document.getElementById("incr_rotation").value/180 * Math.PI;
             patternGen.current_radius_scalor = document.getElementById("c_r_s").value;
-         
+            patternGen.polygon_sides = document.getElementById("polygonSides").value;
+            if (document.getElementById("circle").checked) patternGen.shape = 'circle';
+            if (document.getElementById("polygon").checked) patternGen.shape = 'polygon';
+            
            patternGen.resizeCanvas();
        }
     
@@ -114,7 +130,19 @@
         document.getElementById("c_r_s").addEventListener("input", function() {
             on_paramater_change();
         });
+        document.getElementById("polygonSides").addEventListener("input", function() {
+            on_paramater_change();
+        });
+        document.getElementById("incr_rotation").addEventListener("input", function() {
+            on_paramater_change();
+        });
 
+        document.getElementById("circle").addEventListener("input", function() {
+            on_paramater_change();
+        });
+        document.getElementById("polygon").addEventListener("input", function() {
+            on_paramater_change();
+        });
 
         
     </script>

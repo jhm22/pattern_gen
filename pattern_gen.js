@@ -18,23 +18,27 @@ patternGen.bacgroung_color = "white";
 patternGen.foreground_color = "white";
 patternGen.frequncy = 8;
 patternGen.max_radus_scalor = 7;
-patternGen.canvas_window_coverage = 1;
+patternGen.canvas_window_coverage = 1; // this should probably get removed, not the job of pattern_gen to resize the canvas.
 patternGen.break_animation = false;
 patternGen.animation_expanding = true;
 patternGen.current_radius_scalor = .8;
+patternGen.shape_radius = 20; //pixel radius of shapes
+patternGen.shape = "triangle";
+patternGen.step_rotation_rad = Math.PI; //radians to rotate each progressive shape
+patternGen.polygon_sides = 6;
 
 
 patternGen.tile_circle = function () {
     var h = patternGen.canvas.height;
     var w = patternGen.canvas.width;
-    var r = Math.min(h, w) / (patternGen.frequncy * 2) ;
+    patternGen.shape_radius = Math.min(h, w) / (patternGen.frequncy * 2) ;
 
-    for (let hrz = 0; hrz < (w/(2*r)); hrz++) {
-        for (let vrt = 0; vrt < (h/(2*r)); vrt++) {
+    for (let hrz = 0; hrz < (w/(2*patternGen.shape_radius)); hrz++) {
+        for (let vrt = 0; vrt < (h/(2*patternGen.shape_radius)); vrt++) {
             //console.log(vrt);
             //console.log(hrz);
             patternGen.context.beginPath();
-            patternGen.context.arc(r + r*2*hrz, r + r*2*vrt, r, 0, 2 * Math.PI);
+            patternGen.context.arc(r + patternGen.shape_radius*2*hrz, patternGen.shape_radius + patternGen.shape_radius*2*vrt, patternGen.shape_radius, 0, 2 * Math.PI);
             patternGen.context.stroke();
             patternGen.context.fillStyle = patternGen.foreground_color;
             patternGen.context.fill();
@@ -42,56 +46,88 @@ patternGen.tile_circle = function () {
     }
 }
 
-patternGen.tile_circle_packed = function (radius_scaler) {
+patternGen.circlePathGen = function (horz_offset, vert_offset, rotation_mult) { //rotation_mult unused as circles are rotationally invariant.
+    patternGen.context.arc(horz_offset, vert_offset, patternGen.shape_radius * patternGen.current_radius_scalor, 0, 2 * Math.PI);
+}
+patternGen.squarePathGen = function (horz_offset, vert_offset, rotation_mult) {
+    patternGen.context.rect(horz_offset, vert_offset, patternGen.shape_radius * patternGen.current_radius_scalor * 2, patternGen.shape_radius * patternGen.current_radius_scalor * 2);
+}
+
+patternGen.trianglePathGen = function (horz_offset, vert_offset, rotation_mult) {
+    var rad120 = Math.PI * 2 / 3;
+    var rotn = rotation_mult * patternGen.step_rotation_rad;  //need to fix this
+    var size = patternGen.shape_radius * patternGen.current_radius_scalor;
+    
+    patternGen.context.moveTo( horz_offset + size * Math.sin(rotn),            vert_offset + size * Math.cos(rotn));
+    patternGen.context.lineTo( horz_offset + size * Math.sin(rad120 + rotn),   vert_offset + size * Math.cos(rad120 + rotn));
+    patternGen.context.lineTo( horz_offset + size * Math.sin(2*rad120 + rotn), vert_offset + size * Math.cos(2*rad120 + rotn));
+    patternGen.context.lineTo( horz_offset + size * Math.sin(rotn),            vert_offset + size * Math.cos(rotn));
+                              
+}
+
+patternGen.polygonPathGen= function (horz_offset, vert_offset, rotation_mult) {
+    var radStep = Math.PI * 2 / patternGen.polygon_sides;
+    var rotn = rotation_mult * patternGen.step_rotation_rad;  //need to fix this
+    var size = patternGen.shape_radius * patternGen.current_radius_scalor;
+    
+    patternGen.context.moveTo( horz_offset + size * Math.sin(rotn),  vert_offset + size * Math.cos(rotn));
+    for (let i = 0; i <= patternGen.polygon_sides; i++) {
+        patternGen.context.lineTo( horz_offset + size * Math.sin(radStep*i + rotn),   vert_offset + size * Math.cos(radStep*i + rotn));
+    }
+                              
+}
+
+patternGen.tile_circle_packed = function (pathGenFunction) {
   var h = patternGen.canvas.height;
   var w = patternGen.canvas.width;
-  var r = Math.min(h, w) / (patternGen.frequncy * 2) ;
-  var sqr_rt_three = 1.73205; //the ratio of the side of an equliateral triangle to its hieght, derived from pythogorium theorem.
+  patternGen.shape_radius = Math.min(h, w) / (patternGen.frequncy * 2) ;
+  var sqr_rt_three = 1.73205;
     
   //first loop to fill backgrounds
-  for (let hrz = -1; hrz <= (w/(2*r)); hrz++) {
-      for (let vrt = -1; vrt < (h/(sqr_rt_three*r)); vrt++) {
+  for (let hrz = -1; hrz <= (w/(2*patternGen.shape_radius)); hrz++) {
+      for (let vrt = -1; vrt < (h/(sqr_rt_three*patternGen.shape_radius)); vrt++) {
           //rows are only sqr_rt_three * r apart due to horizontal shifting
           var hrz_offset = 0;
-          if(vrt % 2 != 0) { hrz_offset = r;} //offset odd rows by radius
+          if(vrt % 2 != 0) { hrz_offset = patternGen.shape_radius;} //offset odd rows by radius
 
           patternGen.context.beginPath();
-          patternGen.context.arc(r*2*hrz + hrz_offset, r + r*sqr_rt_three*vrt, r * radius_scaler, 0, 2 * Math.PI);
+          pathGenFunction(patternGen.shape_radius*2*hrz + hrz_offset, patternGen.shape_radius + patternGen.shape_radius*sqr_rt_three*vrt,hrz+vrt - 2);
           patternGen.context.fillStyle = patternGen.foreground_color;
           patternGen.context.fill();
       }
   }
     //second loop to fill lines
-    for (let hrz = -1; hrz <= (w/(2*r)); hrz++) {
-        for (let vrt = -1; vrt < (h/(sqr_rt_three*r)); vrt++) {
+    for (let hrz = -1; hrz <= (w/(2*patternGen.shape_radius)); hrz++) {
+        for (let vrt = -1; vrt < (h/(sqr_rt_three*patternGen.shape_radius)); vrt++) {
             
             var hrz_offset = 0;
-            if(vrt % 2 != 0) { hrz_offset = r;}
+            if(vrt % 2 != 0) { hrz_offset = patternGen.shape_radius;}
 
             patternGen.context.beginPath();
-            
-            patternGen.context.arc(r*2*hrz + hrz_offset, r + r*sqr_rt_three*vrt, r * radius_scaler, 0, 2 * Math.PI);
+            pathGenFunction(patternGen.shape_radius*2*hrz + hrz_offset, patternGen.shape_radius + patternGen.shape_radius*sqr_rt_three*vrt,hrz+vrt -2 );
             //making one circle a red one so we can differentiate the aggregate from the individual
             if(vrt == 3 && hrz == 4) { patternGen.context.strokeStyle = "red"; }
             patternGen.context.stroke();
             if(vrt == 3 && hrz == 4) { patternGen.context.strokeStyle = "black"; }
         }
     }
-  console.log("draw completed ".concat(patternGen.foreground_color));
+  //console.log("draw completed ".concat(patternGen.foreground_color));
 }
 
 patternGen.fill_bg = function () {
     if (!patternGen.context) {return};
     patternGen.context.fillStyle = patternGen.bacgroung_color;
     patternGen.context.fillRect(0, 0, patternGen.canvas.width, patternGen.canvas.height);
-    console.log("bacground_drawn_".concat(patternGen.bacgroung_color));
+    //console.log("bacground_drawn_".concat(patternGen.bacgroung_color));
 }
 
 
-patternGen.drawTiling = function (size_ratio){
-  console.log(size_ratio);
+patternGen.drawTiling = function (){
   patternGen.fill_bg();
-  patternGen.tile_circle_packed(size_ratio);
+    if (patternGen.shape == 'square') { patternGen.tile_circle_packed(patternGen.squarePathGen); }
+    else if (patternGen.shape == 'triangle') { patternGen.tile_circle_packed(patternGen.trianglePathGen); }
+    else if (patternGen.shape == 'polygon') { patternGen.tile_circle_packed(patternGen.polygonPathGen); }
+    else { patternGen.tile_circle_packed(patternGen.circlePathGen); }
 }
 
 patternGen.sleep = function (ms) {
@@ -110,7 +146,7 @@ patternGen.animate_tiling = async function (c_r_s_callback_input_element) {
           for (let i = patternGen.current_radius_scalor * 100; i < patternGen.max_radus_scalor * 100; i++) {
             await patternGen.sleep(120);
               patternGen.current_radius_scalor = i/100;
-              patternGen.drawTiling(patternGen.current_radius_scalor);
+              patternGen.drawTiling();
               if(patternGen.break_animation){return};
               if(c_r_s_callback_input_element) {c_r_s_callback_input_element.value = patternGen.current_radius_scalor;}
           }
@@ -121,7 +157,7 @@ patternGen.animate_tiling = async function (c_r_s_callback_input_element) {
             for (let i = patternGen.current_radius_scalor * 100; i > 0; i--) {
                 await patternGen.sleep(120);
                 patternGen.current_radius_scalor = i/100
-                patternGen.drawTiling(patternGen.current_radius_scalor);
+                patternGen.drawTiling();
                 if(patternGen.break_animation){return};
                 if(c_r_s_callback_input_element) {c_r_s_callback_input_element.value = patternGen.current_radius_scalor;}
             }
